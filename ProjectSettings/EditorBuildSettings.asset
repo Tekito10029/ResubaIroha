@@ -6,6 +6,9 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
-    path: Assets/Scenes/SampleScene.unity
-    guid: 2cda990e2423bbf4892e6590ba056729
+    path: Assets/Usase/tomita/CharaScene.unity
+    guid: b2e21643e8b9b034db733f06a69e91cb
+  - enabled: 1
+    path: Assets/Usase/tomita/game3.unity
+    guid: 36fa9f9d205e7024b9cfc5e38ebf4b5a
   m_configObjects: {}
