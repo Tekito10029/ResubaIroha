@@ -177,7 +177,6 @@ MonoBehaviour:
   nameText: {fileID: 152934094}
   captionSpeed: 0.2
   nextPageIcon: {fileID: 1798865056}
-  textFile: Texts/Scenario
 --- !u!1 &152934092
 GameObject:
   m_ObjectHideFlags: 0

@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using System.Linq;
 
 public class GameManager : MonoBehaviour
 {
@@ -10,6 +11,12 @@ public class GameManager : MonoBehaviour
     private const char SEPARATE_PAGE = '&';
     private const char SEPARATE_MAIN_START = '「';
     private const char SEPARATE_MAIN_END = '」';
+    private const char SEPARATE_SUBSCENE = '#';
+    private const char SEPARATE_COMMAND = '!';
+    private const char COMMAND_SEPARATE_PARAM = '=';
+    private const string COMMAND_JUMP = "jump_to";
+    private Dictionary<string, Queue<string>> _subScenes =
+           new Dictionary<string, Queue<string>>();
     private Queue<string> _pageQueue;
     [SerializeField]
     private Text mainText;
@@ -19,14 +26,16 @@ public class GameManager : MonoBehaviour
     private float captionSpeed = 0.2f;
     [SerializeField]
     private GameObject nextPageIcon;
-    private string _text = "ひろゆき「Hello,World」&ひろゆき「それってあなたの感想ですよね」";
+    [SerializeField]
+    private string textFile = "Texts/Scenario";
+    private string _text = "";
 
     // Start is called before the first frame update
     void Start()
     {
+        Init();
         ReadLine(_text);
         OutputChar();
-        Init();
     }
 
     // Update is called once per frame
@@ -36,9 +45,21 @@ public class GameManager : MonoBehaviour
         if (Input.GetMouseButtonDown(0)) OnClick();
     }
 
+    private string LoadTextFile(string fname)
+    {
+        TextAsset textasset = Resources.Load<TextAsset>(fname);
+        return textasset.text.Replace("\n", "").Replace("\r", "");
+    }
+
     //文字表示
     private void ReadLine(string text)
     {
+        if (text[0].Equals(SEPARATE_COMMAND))
+        {
+            ReadCommand(text);
+            ShowNextPage();
+            return;
+        }
         // '「'の位置で文字列を分ける
         string[] ts = text.Split(SEPARATE_MAIN_START);
         // 分けたときの最初の値、つまり"ひろゆき"が代入される
@@ -112,7 +133,15 @@ public class GameManager : MonoBehaviour
     //初期化
     private void Init()
     {
-        _pageQueue = SeparateString(_text, SEPARATE_PAGE);
+        _text = LoadTextFile(textFile);
+        Queue<string> subScenes = SeparateString(_text, SEPARATE_SUBSCENE);
+        foreach (string subScene in subScenes)
+        {
+            if (subScene.Equals("")) continue;
+            Queue<string> pages = SeparateString(subScene, SEPARATE_PAGE);
+            _subScenes[pages.Dequeue()] = pages;
+        }
+        _pageQueue = _subScenes.First().Value;
         ShowNextPage();
     }
 
@@ -138,6 +167,24 @@ public class GameManager : MonoBehaviour
             if (!ShowNextPage())
                 // UnityエディタのPlayモードを終了する
                 UnityEditor.EditorApplication.isPlaying = false;
+        }
+    }
+
+    private void JumpTo(string parameter)
+    {
+        parameter = parameter.Substring(parameter.IndexOf('"') + 1, parameter.LastIndexOf('"') - parameter.IndexOf('"') - 1);
+        _pageQueue = _subScenes[parameter];
+    }
+
+    private void ReadCommand(string cmdLine)
+    {
+        cmdLine = cmdLine.Remove(0, 1);
+        Queue<string> cmdQueue = SeparateString(cmdLine, SEPARATE_COMMAND);
+        foreach (string cmd in cmdQueue)
+        {
+            string[] cmds = cmd.Split(COMMAND_SEPARATE_PARAM);
+            if (cmds[0].Contains(COMMAND_JUMP))
+                JumpTo(cmds[1]);
         }
     }
 
